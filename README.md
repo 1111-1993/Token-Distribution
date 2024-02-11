@@ -1,7 +1,7 @@
 
 ##  Token-Distribution
 
-Solana smart contract for distributing tokens to whitelisted addresses. It initializes the contract with token and claim amounts, allows whitelisted addresses to claim tokens, manages the whitelist, and sets claim amounts. The code ensures proper error handling, state management, and documentation throughout the contract's functionality.
+Solana smart contract for distributing SPL tokens to whitelisted addresses. It initializes the contract with SPL token and claim amounts, allows whitelisted addresses to claim tokens, manages the whitelist, and sets claim amounts. The code ensures proper error handling, state management, and documentation throughout the contract's functionality.
 
 
 
@@ -60,7 +60,7 @@ Solana smart contract for token distribution using the Anchor framework. Here's 
 
 ### State Account
 - The `State` account structure defines the program's state stored on-chain.
-  - `token_amount`: Total amount of tokens held by the contract.
+  - `token_amount`: Total amount of SPL tokens held by the contract.
   - `whitelist`: List of whitelisted addresses eligible for claiming tokens.
   - `claim_amount`: Amount of tokens each whitelisted address can claim.
   - `claimed`: Array tracking which addresses have claimed tokens.
