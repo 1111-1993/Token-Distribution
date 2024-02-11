@@ -15,7 +15,7 @@
 To deploy this project run
 
 ```bash
-https://github.com/1111-1993/Token-Distribution.git
+git clone https://github.com/1111-1993/Token-Distribution.git
 ```
 ```bash 
 anchor build
