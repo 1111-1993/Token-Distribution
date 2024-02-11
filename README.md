@@ -52,11 +52,51 @@ or try this ```anchor test --skip-local-validator```
 
 ## Documentation
 
+Solana smart contract for token distribution using the Anchor framework. Here's its functionality:
+
+`In Solana, everything is an account`
+
+### State Account
+- The `State` account structure defines the program's state stored on-chain.
+  - `token_amount`: Total amount of tokens held by the contract.
+  - `whitelist`: List of whitelisted addresses eligible for claiming tokens.
+  - `claim_amount`: Amount of tokens each whitelisted address can claim.
+  - `claimed`: Array tracking which addresses have claimed tokens.
+
+
+### Entry Points
+1. **Initialize**
+   - Initializes the contract with an initial token amount and claim amount.
+   - Transfers tokens to the contract's token account.
+   - Saves the contract state.
+
+2. **Claim**
+   - Allows whitelisted addresses to claim their allocated tokens.
+   - Checks if the claimer is whitelisted and hasn't already claimed tokens.
+   - Transfers tokens to the claimer and updates the state.
+
+3. **Add Whitelisted**
+   - Adds an address to the whitelist if it's not already whitelisted.
+
+4. **Set Claim Amount**
+   - Sets the quantity of tokens each whitelisted address can claim.
+
+
+### Error Handling
+- Errors are defined using the `ErrorCode` enum and converted to `ProgramError`.
+- Error codes include not being whitelisted, already claimed, insufficient capacity, and already whitelisted.
+
+### Accounts
+- Structs like `Initialize`, `Claim`, `AddWhitelisted`, `SetClaimAmount`, and `SetWhitelist` define account structures required for each entry point.
+- These structs specify the required accounts and their mutability for each entry point.
+
+### Conversion and Validation
+- Methods like `load` and `save` in the `State` implementation handle conversion to/from byte slices and validation of account data.
+
+
+### References
 [Solana](https://docs.solana.com/)
 
 [Anchor](https://www.anchor-lang.com/)
 
 [Anchor Dependencies](https://www.anchor-lang.com/docs/installation/)
-
-
-
