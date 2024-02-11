@@ -1,9 +1,9 @@
 
 ##  Token-Distribution
 
+Solana smart contract for distributing tokens to whitelisted addresses. It initializes the contract with token and claim amounts, allows whitelisted addresses to claim tokens, manages the whitelist, and sets claim amounts. The code ensures proper error handling, state management, and documentation throughout the contract's functionality.
 
 
-`Framework:` Anchor Installation ```https://www.anchor-lang.com/docs/installation```
 
 
 
@@ -13,6 +13,8 @@
 ## Deployment
 
 To deploy this project run
+
+`Framework:` Anchor Installation ```https://www.anchor-lang.com/docs/installation```
 
 ```bash
 git clone https://github.com/1111-1993/Token-Distribution.git
@@ -94,9 +96,12 @@ Solana smart contract for token distribution using the Anchor framework. Here's 
 - Methods like `load` and `save` in the `State` implementation handle conversion to/from byte slices and validation of account data.
 
 
-### References
+
 [Solana](https://docs.solana.com/)
 
 [Anchor](https://www.anchor-lang.com/)
 
 [Anchor Dependencies](https://www.anchor-lang.com/docs/installation/)
+
+
+
