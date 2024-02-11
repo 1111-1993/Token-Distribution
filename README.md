@@ -1,13 +1,11 @@
 
 ##  Token-Distribution
 
-Solana staking program 
+
 
 `Framework:` Anchor Installation ```https://www.anchor-lang.com/docs/installation```
 
-`SPl Token:` Basic Token
 
-`Total Supply:` 1 billion tokens
 
 
 
@@ -41,4 +39,13 @@ yarn install
 anchor test
 ```
 or try this ```anchor test --skip-local-validator```
+
+
+## Documentation
+
+[Solana](https://docs.solana.com/)
+
+[Anchor](https://www.anchor-lang.com/)
+
+
 
