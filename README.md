@@ -26,6 +26,9 @@ cargo build-bpf --manifest-path=./programs/staker/Cargo.toml --bpf-out-dir=targe
 ```
 then use command ```anchor keys list``` to find out ```Program Id``` and reaplace ```Anchor.toml``` and ```declare_id!``` in ```lib.rs```
 
+```solana-test-validator --reset``` for local validator
+ 
+
 
 ```bash
 anchor deploy
@@ -34,6 +37,12 @@ Install dependencies:
 ```bash
 yarn install
 ```
+
+for test 
+```bash 
+anchor run test
+```
+Well, it turns out anchor has a special command that takes care of that full cycle for us. It's called:
 
 ```bash 
 anchor test
