@@ -47,5 +47,7 @@ or try this ```anchor test --skip-local-validator```
 
 [Anchor](https://www.anchor-lang.com/)
 
+[Anchor Dependencies](https://www.anchor-lang.com/docs/installation/)
+
 
 
