@@ -39,7 +39,11 @@ Install dependencies:
 ```bash
 yarn install
 ```
+for test create a wallet `funder.json` into `token-distribution` folder 
 
+```bash
+solana-keygen new -o funder.json
+```
 for test 
 ```bash 
 anchor run test
