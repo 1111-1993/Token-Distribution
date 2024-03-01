@@ -7,8 +7,6 @@ import { Account, PublicKey, PublicKey as SolPublicKey, Keypair, Connection, Tra
 import BN from 'bn.js';
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react"
 
-
-
 describe("token-distribution", () => {
     // Load funder account from JSON file
     const funderAccountData = fs.readFileSync('./funder.json', 'utf8');
@@ -64,27 +62,16 @@ describe("token-distribution", () => {
     }
 
     // Test function to set the claim amount.
-    async function setClaimAmount(amount: number) {
+    async function fundContract() {
         // Set the claim amount.
-        const tx = await program.rpc.setClaimAmount(amount, {
+        const amount = new BN(10);
+        const tx = await program.rpc.fundContract(amount, {
             accounts: {
                 // No need to pass signers here, Anchor's Provider handles that internally
             },
         });
 
         console.log('Claim amount set:', tx);
-    }
-
-    // Test function to set the whitelist.
-    async function setWhitelist(whitelist: anchor.web3.PublicKey[]) {
-        // Set the whitelist.
-        const tx = await program.rpc.setWhitelist(whitelist, {
-            accounts: {
-                // No need to pass signers here, Anchor's Provider handles that internally
-            },
-        });
-
-        console.log('Whitelist set:', tx);
     }
 
     // Example usage of test functions.
@@ -99,10 +86,7 @@ describe("token-distribution", () => {
         await addToWhitelist(exampleAddress);
 
         // Set the claim amount.
-        await setClaimAmount(50);
-
-        // Set the whitelist.
-        await setWhitelist([exampleAddress]);
+        await fundContract();
 
         // Example claimer address.
         const claimerAddress = new anchor.web3.PublicKey('claimerAddress');
