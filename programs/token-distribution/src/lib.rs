@@ -2,6 +2,8 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Transfer};
 use std::result::Result;
 
+pub mod merkle_proof;
+
 // Declare program ID
 declare_id!("FXqAYUc17LzLQcrUuwd6XQHLT9TYNhiSopW878Kb92DN");
 
@@ -11,8 +13,12 @@ pub mod token_distribution {
     // State account structure
     #[account]
     pub struct State {
-        pub token_amount: u64,
         pub claim_amount: u64,
+        pub merkle_root: [u8; 32],
+        // pub max_total_claim: u64,
+        // pub max_num_nodes: u64,
+        pub total_amount_claimed: u64,
+        pub num_nodes_claimed: u64,
         pub claimed: Vec<Pubkey>,
     }
     // Load state from account data
@@ -53,26 +59,18 @@ pub mod token_distribution {
     // Initialize the contract
     pub fn initialize(
         ctx: Context<Initialize>,
-        amount: u64,
         claim_amount: u64,
+        merkle_root: [u8; 32],
+        // max_total_claim: u64,
+        // max_num_nodes: u64,
     ) -> Result<(), ProgramError> {
-        // Transfer tokens to the contract
-        let cpi_program = ctx.accounts.token_program.clone();
-        let cpi_accounts = Transfer {
-            from: ctx.accounts.funder.to_account_info().clone(),
-            to: ctx
-                .accounts
-                .contract_token_account
-                .to_account_info()
-                .clone(),
-            authority: ctx.accounts.funder_authority.clone(),
-        };
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        token::transfer(cpi_ctx, amount)?;
-
         let state = State {
-            token_amount: amount,
             claim_amount,
+            merkle_root,
+            // max_total_claim,
+            // max_num_nodes,
+            total_amount_claimed: 0,
+            num_nodes_claimed: 0,
             claimed: Vec::new(),
         };
         state.save(&mut ctx.accounts.state)?;
@@ -86,44 +84,46 @@ pub mod token_distribution {
         Ok(())
     }
     // Claim tokens by a whitelisted address
-    pub fn claim(ctx: Context<Claim>, _amount: u64) -> Result<(), ProgramError> {
-        let state = State::load(&ctx.accounts.state)?;
-        let whitelist = Whitelist::load(&ctx.accounts.whitelist)?;
+    pub fn claim(
+        ctx: Context<Claim>,
+        amount: u64,
+        merkle_proof: Vec<[u8; 32]>,
+    ) -> Result<(), ProgramError> {
+        let mut state = State::load(&ctx.accounts.state)?;
 
-        // Check in claimer is whitelisted
-        let claimer = &ctx.accounts.claimer.key();
-        let whitelist_index = whitelist.addresses.iter().position(|x| x == claimer);
-        match whitelist_index {
-            Some(index) => {
-                // Check if claimer has already claimed
-                if state.claimed.contains(claimer) {
-                    return Err(ErrorCode::AlreadyClaimed.into());
-                }
-
-                //check if claim amount exceeds the allocated amount
-                let claim_amount = whitelist.claim_amounts[index];
-                if claim_amount < _amount {
-                    return Err(ErrorCode::ClaimAmountExceedsAllocation.into());
-                }
-
-                //Transfer token to claimer
-                let cpi_program = ctx.accounts.token_program.clone();
-                let cpi_accounts = Transfer {
-                    from: ctx
-                        .accounts
-                        .contract_token_account
-                        .to_account_info()
-                        .clone(),
-                    to: ctx.accounts.claimer.to_account_info().clone(),
-                    authority: ctx.accounts.contract_authority.clone(),
-                };
-                let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-                token::transfer(cpi_ctx, _amount)?;
-
-                Ok(())
-            }
-            None => Err(ErrorCode::NotWhitelisted.into()),
+        // Check if the claimer has already claimed
+        if state.claimed.contains(&ctx.accounts.claimer.key()) {
+            return Err(ErrorCode::AlreadyClaimed.into());
         }
+
+        // Verify the merkle proof
+        let node = anchor_lang::solana_program::keccak::hashv(&[
+            &ctx.accounts.claimer.key().to_bytes(),
+            &amount.to_le_bytes(),
+        ]);
+        if !merkle_proof::verify(merkle_proof, state.merkle_root, node.0) {
+            return Err(ErrorCode::InvalidProof.into());
+        }
+        // Transfer tokens to the claimer
+        token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.contract_token_account.to_account_info(),
+                    to: ctx.accounts.claimer.to_account_info(),
+                    authority: ctx.accounts.contract_authority.to_account_info(),
+                },
+            ),
+            amount,
+        )?;
+
+        // Update state
+        state.total_amount_claimed += amount;
+        state.num_nodes_claimed += 1;
+        state.claimed.push(ctx.accounts.claimer.key());
+        state.save(&mut ctx.accounts.state)?;
+
+        Ok(())
     }
     // Add an address to the whitelist
     pub fn add_whitelisted(
@@ -144,18 +144,17 @@ pub mod token_distribution {
     }
     // Owner function to fund the contract with a specified SPL token
     pub fn fund_contract(ctx: Context<FundContract>, amount: u64) -> Result<(), ProgramError> {
-        let cpi_program = ctx.accounts.token_program.clone();
-        let cpi_account = Transfer {
-            from: ctx.accounts.funder.to_account_info().clone(),
-            to: ctx
-                .accounts
-                .contract_token_account
-                .to_account_info()
-                .clone(),
-            authority: ctx.accounts.funder_authority.clone(),
-        };
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_account);
-        token::transfer(cpi_ctx, amount)?;
+        token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    from: ctx.accounts.funder.to_account_info(),
+                    to: ctx.accounts.contract_token_account.to_account_info(),
+                    authority: ctx.accounts.funder_authority.to_account_info(),
+                },
+            ),
+            amount,
+        )?;
 
         Ok(())
     }
@@ -229,12 +228,10 @@ pub struct FundContract<'info> {
 
 #[error_code]
 pub enum ErrorCode {
-    #[msg("The claimer is not whitelisted.")]
-    NotWhitelisted,
     #[msg("The claimer has already claimed their allocation.")]
     AlreadyClaimed,
-    #[msg("Claim amount exceed the allocated amount.")]
-    ClaimAmountExceedsAllocation,
+    #[msg("Invalid Merkle proof")]
+    InvalidProof,
     #[msg("Address is Already whitelisted.")]
     AlreadyWhitelisted,
 }
@@ -242,10 +239,9 @@ pub enum ErrorCode {
 impl From<ErrorCode> for ProgramError {
     fn from(error: ErrorCode) -> Self {
         match error {
-            ErrorCode::NotWhitelisted => ProgramError::Custom(1),
-            ErrorCode::AlreadyClaimed => ProgramError::Custom(2),
-            ErrorCode::ClaimAmountExceedsAllocation => ProgramError::Custom(3),
-            ErrorCode::AlreadyWhitelisted => ProgramError::Custom(4),
+            ErrorCode::AlreadyClaimed => ProgramError::Custom(1),
+            ErrorCode::InvalidProof => ProgramError::Custom(2),
+            ErrorCode::AlreadyWhitelisted => ProgramError::Custom(3),
         }
     }
 }

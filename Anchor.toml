@@ -7,11 +7,14 @@ skip-lint = false
 [programs.localnet]
 token_distribution = "FXqAYUc17LzLQcrUuwd6XQHLT9TYNhiSopW878Kb92DN"
 
+[programs.devnet]
+token_distribution = "FXqAYUc17LzLQcrUuwd6XQHLT9TYNhiSopW878Kb92DN"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "localnet"
 wallet = "/home/blockcode/.config/solana/id.json"
 
 [scripts]
