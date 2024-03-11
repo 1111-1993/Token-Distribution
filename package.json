@@ -5,6 +5,7 @@
     },
     "dependencies": {
         "@coral-xyz/anchor": "^0.29.0",
+        "@solana/spl-account-compression": "^0.2.0",
         "@solana/spl-token": "^0.1.8",
         "@solana/wallet-adapter-react": "^0.15.35",
         "@solana/web3.js": "^0.30.11"
