@@ -15,8 +15,8 @@ pub mod token_distribution {
     pub struct State {
         pub claim_amount: u64,
         pub merkle_root: [u8; 32],
-        // pub max_total_claim: u64,
-        // pub max_num_nodes: u64,
+        pub max_total_claim: u64,
+        pub max_num_nodes: u64,
         pub total_amount_claimed: u64,
         pub num_nodes_claimed: u64,
         pub claimed: Vec<Pubkey>,
@@ -61,14 +61,14 @@ pub mod token_distribution {
         ctx: Context<Initialize>,
         claim_amount: u64,
         merkle_root: [u8; 32],
-        // max_total_claim: u64,
-        // max_num_nodes: u64,
+        max_total_claim: u64,
+        max_num_nodes: u64,
     ) -> Result<(), ProgramError> {
         let state = State {
             claim_amount,
             merkle_root,
-            // max_total_claim,
-            // max_num_nodes,
+            max_total_claim,
+            max_num_nodes,
             total_amount_claimed: 0,
             num_nodes_claimed: 0,
             claimed: Vec::new(),
@@ -110,7 +110,7 @@ pub mod token_distribution {
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
                     from: ctx.accounts.contract_token_account.to_account_info(),
-                    to: ctx.accounts.claimer.to_account_info(),
+                    to: ctx.accounts.claimer_token_account.to_account_info(),
                     authority: ctx.accounts.contract_authority.to_account_info(),
                 },
             ),
@@ -189,6 +189,9 @@ pub struct Claim<'info> {
     /// CHECK:
     #[account(mut, signer)]
     pub claimer: AccountInfo<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub claimer_token_account: AccountInfo<'info>,
     /// CHECK:
     #[account(mut)]
     pub contract_token_account: AccountInfo<'info>,
